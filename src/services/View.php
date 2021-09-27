@@ -92,6 +92,51 @@ class View extends Component
         ];
     }
 
+    //
+    public function decrement($elementId, $key = null, $userId = null)
+    {
+        // Ensure the user ID is valid
+        ViewCount::$plugin->viewCount->validateUserId($userId);
+
+        // Get request
+        $request = Craft::$app->getRequest();
+
+        // Get data
+        $data = [
+            'elementId' => (int) $elementId,
+            'key'       => $key . '-decrement',
+            'userId'    => ($userId ? (int) $userId : null),
+            'ipAddress' => $request->getUserIP(),
+            'userAgent' => $request->getUserAgent(),
+        ];
+
+        Craft::dd($key);
+
+        // Update element total
+        $totalSuccess = $this->_updateElementTotals($elementId, $key);
+        $logSuccess   = $this->_updateViewLog($elementId, $key, $userId);
+
+        // Update user histories
+        $this->_updateUserHistoryDatabase($elementId, $key, $userId);
+        $this->_updateUserHistoryCookie($elementId, $key);
+
+        // Basic error check
+        if (!$totalSuccess) {
+            $error = 'Unable to update element total.';
+        } else if (!$logSuccess) {
+            $error = 'Unable to log details.';
+        } else {
+            $error = null;
+        }
+
+        // Return data
+        return [
+            'success' => ($totalSuccess && $logSuccess),
+            'error' => $error,
+            'data' => $data,
+        ];
+    }
+
     /**
      * Trigger event before a view
      */

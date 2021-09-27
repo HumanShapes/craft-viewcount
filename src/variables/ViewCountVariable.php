@@ -35,6 +35,12 @@ class ViewCountVariable
         ViewCount::$plugin->view->increment($elementId, $key, $userId);
     }
 
+    // Decrement view count
+    public function decrement($elementId, $key = null, $userId = null)
+    {
+        ViewCount::$plugin->view->decrement($elementId, $key, $userId);
+    }
+
     // Sort by "most viewed"
     public function sort(ElementQuery $elements, $key = null)
     {
