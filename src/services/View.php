@@ -110,15 +110,9 @@ class View extends Component
             'userAgent' => $request->getUserAgent(),
         ];
 
-        Craft::dd($key);
-
         // Update element total
-        $totalSuccess = $this->_updateElementTotals($elementId, $key);
-        $logSuccess   = $this->_updateViewLog($elementId, $key, $userId);
-
-        // Update user histories
-        $this->_updateUserHistoryDatabase($elementId, $key, $userId);
-        $this->_updateUserHistoryCookie($elementId, $key);
+        $totalSuccess = $this->_updateElementTotals($elementId, $key, true);
+        $logSuccess   = $this->_updateViewLog($elementId, $data['key'], $userId);
 
         // Basic error check
         if (!$totalSuccess) {
@@ -249,7 +243,7 @@ class View extends Component
     }
 
     //
-    private function _updateElementTotals($elementId, $key)
+    private function _updateElementTotals($elementId, $key, $decrement = false)
     {
         // Load existing element totals
         $record = ElementTotal::findOne([
@@ -266,7 +260,11 @@ class View extends Component
         }
 
         // Update view count
-        $record->viewTotal++;
+        if ($decrement && $record->viewTotal >= 1) {
+            $record->viewTotal--;
+        } else {
+            $record->viewTotal++;
+        }
 
         // Save
         return $record->save();
